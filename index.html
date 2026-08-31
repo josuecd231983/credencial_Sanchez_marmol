@@ -284,27 +284,14 @@
     ].join('\n');
   }
 
-  // Capacidad de bytes (modo Byte, nivel de corrección M) por versión de QR — tabla estándar
-  const QR_BYTE_CAPACITY_M = [0,14,26,42,62,84,106,122,152,180,213,
-    251,287,331,362,412,450,504,560,624,666,
-    711,779,857,911,997,1059,1125,1190,1264,1370,
-    1452,1538,1628,1722,1809,1911,1989,2099,2213,2331];
-
-  function pickQrVersion(byteLength){
-    for (let v = 1; v <= 40; v++){
-      if (QR_BYTE_CAPACITY_M[v] >= byteLength + 8) return v; // +8 de margen de seguridad
-    }
-    return 40;
-  }
-
   function renderQr(){
     const box = document.getElementById('qrBox');
     box.innerHTML = '';
     const text = buildQrPayload();
-    const byteLength = new TextEncoder().encode(text).length;
-    const version = pickQrVersion(byteLength);
     try {
-      new QRCode(box, { text, width: 120, height: 120, typeNumber: version, correctLevel: QRCode.CorrectLevel.M });
+      // Tamaño fijo y generoso (versión 40, corrección L) para que nunca
+      // se quede corto de espacio, sin depender de calcular el tamaño exacto.
+      new QRCode(box, { text, width: 120, height: 120, typeNumber: 40, correctLevel: QRCode.CorrectLevel.L });
     } catch (e) {
       console.error('No se pudo generar el QR:', e);
       return;
