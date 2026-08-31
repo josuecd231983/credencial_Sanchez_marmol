@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solicitud de Credencial Escolar — Manuel Sánchez Mármol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Librerías: código QR, captura de HTML a imagen, y generación de PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+  :root{
+    --maroon:#7A1E3F;
+    --maroon-deep:#5B1730;
+    --pink:#B0225A;
+    --paper:#F2EDE0;
+    --card:#FFFFFF;
+    --ink:#232323;
+    --muted:#6E6B62;
+    --line:#DCD7C8;
+    --error:#B3432B;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;line-height:1.5;
+    padding:2.5rem 1.25rem 4rem;
+  }
+  .page{max-width:960px;margin:0 auto;}
+  h1{font-family:'Fraunces',serif;font-weight:700;font-size:1.6rem;color:var(--maroon-deep);margin:0 0 .3rem;}
+  .lede{color:var(--muted);margin:0 0 2rem;max-width:60ch;}
+
+  /* ---------- Vista previa de credencial ---------- */
+  .previews{display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center;margin-bottom:2.5rem;}
+  .credential{
+    width:300px;background:url('assets/textura-fondo.png');background-size:220px;
+    border:3px solid var(--maroon);border-radius:12px;padding:14px;
+    text-align:center;position:relative;overflow:hidden;
+  }
+  .cred-header{margin-bottom:8px;}
+  .cred-header img{width:100%;height:auto;display:block;}
+  .cred-title{font-weight:800;font-size:.82rem;color:var(--ink);margin:.2rem 0;}
+  .cred-subtitle{font-size:.62rem;font-weight:600;color:var(--ink);margin-bottom:8px;}
+  .cred-photo{
+    width:120px;height:150px;margin:0 auto 8px;border:1px solid var(--line);
+    border-radius:4px;background:#eee;background-size:cover;background-position:center;
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+  .cred-photo svg{opacity:.3;}
+  .cred-name{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;margin:0 0 8px;text-transform:uppercase;}
+  .cred-line{font-size:.72rem;margin:3px 0;text-align:left;padding:0 6px;}
+  .cred-line b{color:var(--ink);}
+  .cred-line span.val{color:var(--pink);font-weight:700;}
+  .cred-folio{font-size:.72rem;margin-top:10px;text-align:left;padding:0 6px;}
+
+  .cred-back{position:relative;}
+  .cred-back .watermark{
+    position:absolute;top:50%;left:50%;width:78%;
+    transform:translate(-50%,-50%) rotate(-18deg);
+    opacity:.1;z-index:-1;pointer-events:none;
+  }
+  .cred-back .cct{position:absolute;top:10px;right:12px;font-size:.6rem;font-weight:700;}
+  .cred-back h3{color:var(--pink);font-size:.75rem;margin:14px 0 6px;text-transform:uppercase;}
+  .cred-back .disclaimer{font-size:.58rem;color:var(--muted);text-align:justify;padding:0 4px;margin:10px 0;}
+  .cred-back .intransferible{color:var(--pink);font-weight:700;font-size:.68rem;margin:8px 0;}
+  .cred-back .director{font-weight:700;font-size:.72rem;margin-top:10px;}
+  .cred-back .director small{display:block;font-weight:400;color:var(--muted);}
+  .cred-back .ciclo{color:var(--pink);font-weight:800;font-size:1.1rem;margin-top:6px;}
+  .stamp{position:absolute;bottom:8px;left:10px;width:54px;height:auto;
+    opacity:.92;transform:rotate(-7deg);}
+  .qr-box{position:absolute;bottom:10px;right:10px;width:64px;height:64px;background:#fff;padding:2px;}
+  .qr-box img,.qr-box canvas{width:100%;height:100%;}
+
+  /* ---------- Formulario ---------- */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.75rem clamp(1.1rem,4vw,2rem);}
+  section{padding:1.4rem 0;border-top:1px solid var(--line);}
+  section:first-of-type{border-top:none;padding-top:0;}
+  h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;color:var(--maroon-deep);margin:0 0 1rem;}
+  label{display:block;font-size:.85rem;font-weight:500;color:var(--ink);margin-bottom:1rem;}
+  label .field-name{display:block;margin-bottom:.35rem;}
+  .hint{font-size:.82rem;color:var(--muted);margin:-.3rem 0 1rem;}
+  input,select,textarea{
+    width:100%;font-family:inherit;font-size:.95rem;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:8px;padding:.65rem .75rem;
+  }
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--maroon);outline-offset:1px;border-color:var(--maroon);}
+  textarea{min-height:4.5rem;resize:vertical;}
+  .row{display:grid;grid-template-columns:1fr;gap:1rem;}
+  @media(min-width:560px){.row{grid-template-columns:1fr 1fr;}}
+  @media(min-width:560px){.row3{grid-template-columns:1fr 1fr 1fr;}}
+  input[type="file"]{padding:.5rem;background:var(--paper);}
+  button[type="submit"]{
+    width:100%;background:var(--maroon);color:#fff;border:none;font-family:inherit;
+    font-weight:600;font-size:1rem;padding:.85rem 1rem;border-radius:9px;cursor:pointer;margin-top:.5rem;
+  }
+  button[type="submit"]:hover{background:var(--maroon-deep);}
+  button[type="submit"]:disabled{opacity:.6;cursor:wait;}
+  .fine{font-size:.78rem;color:var(--muted);margin-top:.75rem;text-align:center;}
+  #statusNote{margin-top:1.25rem;padding:1rem 1.1rem;border-radius:10px;font-size:.9rem;}
+  #statusNote.ok{background:#E7F3EC;color:#245C40;border:1px solid #BFE0CD;}
+  #statusNote.err{background:#FBE9E5;color:var(--error);border:1px solid #F3C4B8;}
+  #pdfBtn{width:100%;margin-top:.75rem;background:var(--ink);color:#fff;border:none;
+    font-family:inherit;font-weight:600;font-size:.95rem;padding:.75rem 1rem;border-radius:9px;cursor:pointer;}
+  [hidden]{display:none!important;}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Solicitud de credencial escolar</h1>
+  <p class="lede">Escuela Primaria "Manuel Sánchez Mármol". Completa los datos de tu hijo(a) y sube su fotografía; al enviar el registro se asignará un folio y podrás descargar la credencial en PDF.</p>
+
+  <div class="previews">
+    <!-- FRENTE -->
+    <div class="credential" id="cardFront">
+      <div class="cred-header">
+        <img src="assets/logo-tabasco.png" alt="Gobierno del Estado de Tabasco — Secretaría de Educación">
+      </div>
+      <p class="cred-title">ESC. PRIM. URBANA FEDERAL<br>MANUEL SÁNCHEZ MÁRMOL</p>
+      <p class="cred-subtitle">CCT: 27DPR0233T | ZONA 014&nbsp;&nbsp;&nbsp;VILLAHERMOSA, TAB.</p>
+      <div class="cred-photo" id="pfFoto">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#999"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" fill="#999"/></svg>
+      </div>
+      <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
+      <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
+      <p class="cred-line"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val" id="pfTurno">—</span></p>
+      <p class="cred-line"><b>CICLO ESCOLAR:</b> <span class="val">2026-2027</span></p>
+      <p class="cred-folio"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
+    </div>
+
+    <!-- REVERSO -->
+    <div class="credential cred-back" id="cardBack">
+      <img class="watermark" src="assets/escudo-tabasco-dorado.png" alt="">
+      <span class="cct">CCT: 27DPR0233T</span>
+      <h3>Aviso de emergencia</h3>
+      <p class="cred-line"><b>TIPO DE SANGRE:</b> <span class="val" id="pbSangre">—</span></p>
+      <p class="cred-line"><b>ALERGIAS:</b> <span class="val" id="pbAlergias">—</span></p>
+      <h3>En caso de emergencia llamar a:</h3>
+      <p class="cred-line"><b>TUTOR:</b> <span class="val" id="pbTutorNombre">—</span></p>
+      <p class="cred-line"><b>CELULAR:</b> <span class="val" id="pbTutorCel">—</span></p>
+      <p class="cred-line"><b>PERSONA AUTORIZADA:</b> <span class="val" id="pbAutNombre">—</span></p>
+      <p class="cred-line"><b>CELULAR:</b> <span class="val" id="pbAutCel">—</span></p>
+      <p class="intransferible">ESTA CREDENCIAL ES PERSONAL E INTRANSFERIBLE</p>
+      <p class="disclaimer">El portador es alumno(a) inscrito(a) en esta institución educativa. Su validez oficial frente a las autoridades civiles, militares y de servicios de transporte corresponde única y exclusivamente al ciclo escolar marcado en relieve en este documento.</p>
+      <p class="director">Prof. Nepomuceno Natividad Méndez Jiménez<small>Director</small></p>
+      <p class="ciclo">2026-2027</p>
+      <img class="stamp" src="assets/sello-escolar.png" alt="Sello de la escuela">
+      <div class="qr-box" id="qrBox"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <form id="requestForm" novalidate>
+      <section>
+        <h2>Datos del estudiante</h2>
+        <label><span class="field-name">Nombre completo del estudiante</span>
+          <input type="text" id="nombre" required autocomplete="off"></label>
+        <label><span class="field-name">CURP</span>
+          <input type="text" id="curp" required maxlength="18"
+            pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}" placeholder="18 caracteres"
+            style="text-transform:uppercase" autocomplete="off"></label>
+        <p class="hint">Se convierte a mayúsculas automáticamente.</p>
+        <div class="row row3">
+          <label><span class="field-name">Grado</span>
+            <select id="grado" required><option value="" disabled selected>Selecciona…</option>
+              <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option><option>6°</option>
+            </select></label>
+          <label><span class="field-name">Grupo</span>
+            <select id="grupo" required><option value="" disabled selected>Selecciona…</option>
+              <option>A</option><option>B</option><option>C</option><option>Único</option>
+            </select></label>
+          <label><span class="field-name">Turno</span>
+            <select id="turno" required><option value="" disabled selected>Selecciona…</option>
+              <option>MATUTINO</option><option>VESPERTINO</option>
+            </select></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Información médica</h2>
+        <label><span class="field-name">Tipo de sangre del menor</span>
+          <select id="sangre" required><option value="" disabled selected>Selecciona…</option>
+            <option>A+</option><option>A−</option><option>B+</option><option>B−</option>
+            <option>AB+</option><option>AB−</option><option>O+</option><option>O−</option><option>No especificado</option>
+          </select></label>
+        <label><span class="field-name">Alergias</span>
+          <textarea id="alergias" required placeholder="Si no presenta alergias, escribe: Ninguna"></textarea></label>
+      </section>
+
+      <section>
+        <h2>Tutor responsable</h2>
+        <div class="row">
+          <label><span class="field-name">Nombre completo del tutor</span>
+            <input type="text" id="tutorNombre" required autocomplete="off"></label>
+          <label><span class="field-name">Número de celular</span>
+            <input type="tel" id="tutorCel" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric" placeholder="10 dígitos"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Persona autorizada para recoger al menor</h2>
+        <div class="row">
+          <label><span class="field-name">Nombre completo</span>
+            <input type="text" id="autNombre" required autocomplete="off"></label>
+          <label><span class="field-name">Número de teléfono</span>
+            <input type="tel" id="autTel" required pattern="[0-9]{10}" maxlength="10" inputmode="numeric" placeholder="10 dígitos"></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Fotografía del menor</h2>
+        <p class="hint">Debe ser una fotografía reciente, a color, tipo infantil (fondo claro, rostro descubierto).</p>
+        <input type="file" id="foto" accept="image/*" required>
+      </section>
+
+      <button type="submit" id="submitBtn">Enviar registro</button>
+      <p class="fine">Al enviar, se asignará un folio consecutivo y se guardará el registro en la base de datos de la escuela.</p>
+    </form>
+
+    <div id="statusNote" hidden></div>
+    <button id="pdfBtn" hidden>Descargar credencial en PDF</button>
+  </div>
+</div>
+
+<script>
+  /* =======================================================
+     CONFIGURACIÓN — edita estos valores antes de publicar
+     ======================================================= */
+  // URL del Web App de Google Apps Script (ver Code.gs / README)
+  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2mHQBXWo9EGfMfLNOa_Y016xXvPSMzXxuGdxRhhBUFmlmVuptr6dBI2GKcotl1rG2Hg/exec";
+
+  /* ======================================================= */
+
+  const form = document.getElementById('requestForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusNote = document.getElementById('statusNote');
+  const pdfBtn = document.getElementById('pdfBtn');
+
+  const el = id => document.getElementById(id);
+  const nombre=el('nombre'), curp=el('curp'), grado=el('grado'), grupo=el('grupo'),
+        turno=el('turno'), sangre=el('sangre'), alergias=el('alergias'),
+        tutorNombre=el('tutorNombre'), tutorCel=el('tutorCel'),
+        autNombre=el('autNombre'), autTel=el('autTel'), foto=el('foto');
+
+  let fotoDataUrl = null;
+  let qrDataUrl = null;
+  let assignedFolio = null;
+
+  // --- Vista previa en vivo ---
+  nombre.addEventListener('input', () => el('pfNombre').textContent = nombre.value || 'Nombre del estudiante');
+  curp.addEventListener('input', () => { curp.value = curp.value.toUpperCase(); el('pfCurp').textContent = curp.value || '—'; });
+  grado.addEventListener('change', () => el('pfGrado').textContent = grado.value || '—');
+  grupo.addEventListener('change', () => el('pfGrupo').textContent = grupo.value || '—');
+  turno.addEventListener('change', () => el('pfTurno').textContent = turno.value || '—');
+  sangre.addEventListener('change', () => el('pbSangre').textContent = sangre.value || '—');
+  alergias.addEventListener('input', () => el('pbAlergias').textContent = alergias.value || '—');
+  tutorNombre.addEventListener('input', () => el('pbTutorNombre').textContent = tutorNombre.value || '—');
+  tutorCel.addEventListener('input', () => el('pbTutorCel').textContent = tutorCel.value || '—');
+  autNombre.addEventListener('input', () => el('pbAutNombre').textContent = autNombre.value || '—');
+  autTel.addEventListener('input', () => el('pbAutCel').textContent = autTel.value || '—');
+
+  foto.addEventListener('change', () => {
+    const file = foto.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      fotoDataUrl = e.target.result;
+      const box = el('pfFoto');
+      box.style.backgroundImage = `url(${fotoDataUrl})`;
+      box.innerHTML = '';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function buildQrPayload(){
+    return [
+      `NOMBRE: ${nombre.value}`,
+      `CURP: ${curp.value}`,
+      `GRADO/GRUPO: ${grado.value} ${grupo.value}`,
+      `SANGRE: ${sangre.value}`,
+      `TUTOR: ${tutorNombre.value} (${tutorCel.value})`,
+      `AUTORIZADO: ${autNombre.value} (${autTel.value})`
+    ].join('\n');
+  }
+
+  function renderQr(){
+    const box = document.getElementById('qrBox');
+    box.innerHTML = '';
+    new QRCode(box, { text: buildQrPayload(), width: 120, height: 120, correctLevel: QRCode.CorrectLevel.M });
+    // qrcodejs tarda un tick en pintar el canvas/img; esperamos antes de leer el dataURL
+    setTimeout(() => {
+      const img = box.querySelector('img') || box.querySelector('canvas');
+      qrDataUrl = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
+    }, 150);
+  }
+
+  // Regenerar QR cuando cambian los datos relevantes
+  [nombre,curp,grado,grupo,sangre,tutorNombre,tutorCel,autNombre,autTel].forEach(input => {
+    input.addEventListener('change', renderQr);
+    input.addEventListener('blur', renderQr);
+  });
+
+  function setStatus(type, msg){
+    statusNote.hidden = false;
+    statusNote.className = type;
+    statusNote.textContent = msg;
+  }
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (!form.checkValidity()){ form.reportValidity(); return; }
+    if (!fotoDataUrl){ setStatus('err','Adjunta la fotografía del menor.'); return; }
+    if (APPS_SCRIPT_URL.startsWith('PON_AQUI')){
+      setStatus('err','Falta configurar APPS_SCRIPT_URL en el código (ver README).');
+      return;
+    }
+
+    renderQr();
+    await new Promise(r => setTimeout(r, 250)); // asegura que el QR ya se generó
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando…';
+
+    const payload = {
+      nombre: nombre.value, curp: curp.value, grado: grado.value, grupo: grupo.value,
+      turno: turno.value, cicloEscolar: '2026-2027', sangre: sangre.value, alergias: alergias.value,
+      tutorNombre: tutorNombre.value, tutorCelular: tutorCel.value,
+      autNombre: autNombre.value, autCelular: autTel.value,
+      fotoBase64: fotoDataUrl, qrBase64: qrDataUrl
+    };
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS con Apps Script
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+      assignedFolio = data.folio;
+      el('pfFolio').textContent = assignedFolio;
+      setStatus('ok', `Registro guardado. Folio asignado: ${assignedFolio}.`);
+      pdfBtn.hidden = false;
+      submitBtn.textContent = 'Registro enviado';
+    } catch (err) {
+      setStatus('err', 'No se pudo guardar el registro: ' + err.message);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar registro';
+    }
+  });
+
+  pdfBtn.addEventListener('click', async () => {
+    pdfBtn.disabled = true; pdfBtn.textContent = 'Generando PDF…';
+    const { jsPDF } = window.jspdf;
+    const front = document.getElementById('cardFront');
+    const back = document.getElementById('cardBack');
+
+    const [canvasFront, canvasBack] = await Promise.all([
+      html2canvas(front, { scale: 3 }),
+      html2canvas(back, { scale: 3 })
+    ]);
+
+    const doc = new jsPDF({ unit: 'mm', format: [90, 140] });
+    const w = 80, h = (canvasFront.height / canvasFront.width) * w;
+
+    doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', 5, 5, w, h);
+    doc.addPage([90,140]);
+    doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', 5, 5, w, (canvasBack.height/canvasBack.width)*w);
+
+    doc.save(`credencial_${assignedFolio || 'sin_folio'}.pdf`);
+    pdfBtn.disabled = false; pdfBtn.textContent = 'Descargar credencial en PDF';
+  });
+</script>
+</body>
+</html>
