@@ -78,6 +78,10 @@
 
   /* ---------- Formulario ---------- */
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1.75rem clamp(1.1rem,4vw,2rem);}
+  #lookupCard{margin-bottom:1.5rem;}
+  #lookupStatus{margin-top:1rem;padding:.85rem 1rem;border-radius:10px;font-size:.88rem;}
+  #lookupStatus.ok{background:#E7F3EC;color:#245C40;border:1px solid #BFE0CD;}
+  #lookupStatus.err{background:#FBE9E5;color:var(--error);border:1px solid #F3C4B8;}
   section{padding:1.4rem 0;border-top:1px solid var(--line);}
   section:first-of-type{border-top:none;padding-top:0;}
   h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.05rem;color:var(--maroon-deep);margin:0 0 1rem;}
@@ -151,6 +155,19 @@
       <img class="stamp" src="assets/sello-escolar.png" alt="Sello de la escuela">
       <div class="qr-box" id="qrBox"></div>
     </div>
+  </div>
+
+  <div class="card" id="lookupCard">
+    <h2>¿Ya enviaste tu registro y necesitas corregir algo?</h2>
+    <p class="hint">Escribe el folio que te aparece en la credencial y podrás editar los datos antes de guardar de nuevo.</p>
+    <div class="row">
+      <label><span class="field-name">Folio</span>
+        <input type="text" id="folioLookup" placeholder="Ej. 0007"></label>
+      <div style="align-self:end;">
+        <button type="button" id="lookupBtn" style="width:100%;background:var(--ink);color:#fff;border:none;font-family:inherit;font-weight:600;font-size:.95rem;padding:.65rem 1rem;border-radius:8px;cursor:pointer;">Buscar mi registro</button>
+      </div>
+    </div>
+    <div id="lookupStatus" hidden></div>
   </div>
 
   <div class="card">
@@ -235,6 +252,9 @@
   const submitBtn = document.getElementById('submitBtn');
   const statusNote = document.getElementById('statusNote');
   const pdfBtn = document.getElementById('pdfBtn');
+  const lookupBtn = document.getElementById('lookupBtn');
+  const folioInput = document.getElementById('folioLookup');
+  const lookupStatus = document.getElementById('lookupStatus');
 
   const el = id => document.getElementById(id);
   const nombre=el('nombre'), curp=el('curp'), grado=el('grado'), grupo=el('grupo'),
@@ -247,6 +267,7 @@
   let fotoDataUrl = null;
   let qrDataUrl = null;
   let assignedFolio = null;
+  let editingFolio = null;
 
   // --- Vista previa en vivo ---
   nombre.addEventListener('input', () => el('pfNombre').textContent = nombre.value || 'Nombre del estudiante');
@@ -276,11 +297,7 @@
   function buildQrPayload(){
     return [
       `NOMBRE: ${nombre.value}`,
-      `CURP: ${curp.value}`,
-      `GRADO/GRUPO: ${grado.value} ${grupo.value}`,
-      `SANGRE: ${sangre.value}`,
-      `TUTOR: ${tutorNombre.value} (${tutorCel.value})`,
-      `AUTORIZADO: ${autNombre.value} (${autTel.value})`
+      `CURP: ${curp.value}`
     ].join('\n');
   }
 
@@ -304,8 +321,8 @@
     qrDataUrl = img.src;
   }
 
-  // Regenerar QR cuando cambian los datos relevantes
-  [nombre,curp,grado,grupo,sangre,tutorNombre,tutorCel,autNombre,autTel].forEach(input => {
+  // Regenerar QR cuando cambian los datos relevantes (solo nombre y CURP)
+  [nombre,curp].forEach(input => {
     input.addEventListener('change', renderQr);
     input.addEventListener('blur', renderQr);
   });
@@ -316,10 +333,77 @@
     statusNote.textContent = msg;
   }
 
+  function setLookupStatus(type, msg){
+    lookupStatus.hidden = false;
+    lookupStatus.className = type;
+    lookupStatus.textContent = msg;
+  }
+
+  function fillFormFromRow(row){
+    nombre.value = row['Nombre'] || '';
+    curp.value = row['CURP'] || '';
+    grado.value = String(row['Grado'] || '');
+    grupo.value = row['Grupo'] || '';
+    sangre.value = row['Tipo de Sangre'] || '';
+    alergias.value = row['Alergias'] || '';
+    tutorNombre.value = row['Tutor'] || '';
+    tutorCel.value = String(row['Celular Tutor'] || '');
+    autNombre.value = row['Autorizado'] || '';
+    autTel.value = String(row['Celular Autorizado'] || '');
+
+    // Actualiza la vista previa de la credencial con los datos cargados
+    el('pfNombre').textContent = nombre.value || 'Nombre del estudiante';
+    el('pfCurp').textContent = curp.value || '—';
+    el('pfGrado').textContent = grado.value || '—';
+    el('pfGrupo').textContent = grupo.value || '—';
+    el('pbSangre').textContent = sangre.value || '—';
+    el('pbAlergias').textContent = alergias.value || '—';
+    el('pbTutorNombre').textContent = tutorNombre.value || '—';
+    el('pbTutorCel').textContent = tutorCel.value || '—';
+    el('pbAutNombre').textContent = autNombre.value || '—';
+    el('pbAutCel').textContent = autTel.value || '—';
+    el('pfFolio').textContent = row['Folio'] || '—';
+    if (row['Foto (URL)']) {
+      const box = el('pfFoto');
+      box.style.backgroundImage = `url(${row['Foto (URL)']})`;
+      box.innerHTML = '';
+    }
+    renderQr();
+  }
+
+  lookupBtn.addEventListener('click', async () => {
+    const folio = folioInput.value.trim();
+    if (!folio) { setLookupStatus('err', 'Escribe un folio para buscar.'); return; }
+    if (APPS_SCRIPT_URL.startsWith('PON_AQUI')){
+      setLookupStatus('err', 'Falta configurar APPS_SCRIPT_URL en el código (ver README).');
+      return;
+    }
+
+    lookupBtn.disabled = true; lookupBtn.textContent = 'Buscando…';
+    try {
+      const res = await fetch(`${APPS_SCRIPT_URL}?folio=${encodeURIComponent(folio)}`);
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+      if (!data.found) {
+        setLookupStatus('err', `No se encontró ningún registro con el folio ${folio}.`);
+      } else {
+        fillFormFromRow(data.row);
+        editingFolio = folio;
+        foto.required = false; // conserva la foto guardada si no seleccionan una nueva
+        submitBtn.textContent = 'Actualizar registro';
+        setLookupStatus('ok', 'Registro encontrado. Corrige lo que necesites y presiona "Actualizar registro". Si no cambias la fotografía, se conserva la que ya estaba guardada.');
+      }
+    } catch (err) {
+      setLookupStatus('err', 'No se pudo buscar el registro: ' + err.message);
+    }
+    lookupBtn.disabled = false; lookupBtn.textContent = 'Buscar mi registro';
+  });
+
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if (!form.checkValidity()){ form.reportValidity(); return; }
-    if (!fotoDataUrl){ setStatus('err','Adjunta la fotografía del menor.'); return; }
+    if (!fotoDataUrl && !editingFolio){ setStatus('err','Adjunta la fotografía del menor.'); return; }
     if (APPS_SCRIPT_URL.startsWith('PON_AQUI')){
       setStatus('err','Falta configurar APPS_SCRIPT_URL en el código (ver README).');
       return;
@@ -328,7 +412,7 @@
     renderQr();
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Enviando…';
+    submitBtn.textContent = editingFolio ? 'Actualizando…' : 'Enviando…';
 
     const payload = {
       nombre: nombre.value, curp: curp.value, grado: grado.value, grupo: grupo.value,
@@ -337,6 +421,7 @@
       autNombre: autNombre.value, autCelular: autTel.value,
       fotoBase64: fotoDataUrl, qrBase64: qrDataUrl
     };
+    if (editingFolio) payload.folioExistente = editingFolio;
 
     try {
       const res = await fetch(APPS_SCRIPT_URL, {
@@ -349,13 +434,15 @@
 
       assignedFolio = data.folio;
       el('pfFolio').textContent = assignedFolio;
-      setStatus('ok', `Registro guardado. Folio asignado: ${assignedFolio}.`);
+      setStatus('ok', data.updated
+        ? `Registro actualizado. Folio: ${assignedFolio}.`
+        : `Registro guardado. Folio asignado: ${assignedFolio}.`);
       pdfBtn.hidden = false;
-      submitBtn.textContent = 'Registro enviado';
+      submitBtn.textContent = editingFolio ? 'Registro actualizado' : 'Registro enviado';
     } catch (err) {
       setStatus('err', 'No se pudo guardar el registro: ' + err.message);
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Enviar registro';
+      submitBtn.textContent = editingFolio ? 'Actualizar registro' : 'Enviar registro';
     }
   });
 
@@ -370,12 +457,19 @@
       html2canvas(back, { scale: 3 })
     ]);
 
-    const doc = new jsPDF({ unit: 'mm', format: [90, 140] });
-    const w = 80, h = (canvasFront.height / canvasFront.width) * w;
+    // Tamaño físico de cada credencial, similar a una credencial de elector
+    const cardW = 55; // mm de ancho
+    const hFront = (canvasFront.height / canvasFront.width) * cardW;
+    const hBack = (canvasBack.height / canvasBack.width) * cardW;
+    const margin = 6, gap = 6;
+    const pageW = margin * 2 + cardW * 2 + gap;
+    const pageH = margin * 2 + Math.max(hFront, hBack);
 
-    doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', 5, 5, w, h);
-    doc.addPage([90,140]);
-    doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', 5, 5, w, (canvasBack.height/canvasBack.width)*w);
+    // Hoja horizontal, del tamaño justo para las dos credenciales lado a lado
+    const doc = new jsPDF({ unit: 'mm', format: [pageW, pageH] });
+
+    doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', margin, margin, cardW, hFront);
+    doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', margin + cardW + gap, margin, cardW, hBack);
 
     doc.save(`credencial_${assignedFolio || 'sin_folio'}.pdf`);
     pdfBtn.disabled = false; pdfBtn.textContent = 'Descargar credencial en PDF';
