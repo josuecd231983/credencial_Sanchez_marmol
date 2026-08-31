@@ -290,7 +290,7 @@
     '3B': 'grupo3B',
     '4A': 'grupo4A',
     '4B': 'grupo4B',
-    '5A': 'grupp5A',
+    '5A': 'grupo5A',
     '5B': 'grupo5B',
     '6A': 'grupo6A',
     '6B': 'grupo6B'
@@ -468,7 +468,12 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (!data.ok) throw new Error(data.error || 'Error desconocido');
+      if (!data.ok) {
+        if (data.duplicado) {
+          throw new Error(`${data.error} Si necesitas corregir algo, usa "¿Ya enviaste tu registro?" arriba con ese folio.`);
+        }
+        throw new Error(data.error || 'Error desconocido');
+      }
 
       assignedFolio = data.folio;
       el('pfFolio').textContent = assignedFolio;
