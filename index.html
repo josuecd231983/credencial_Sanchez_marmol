@@ -466,7 +466,7 @@
     const pageH = margin * 2 + Math.max(hFront, hBack);
 
     // Hoja horizontal, del tamaño justo para las dos credenciales lado a lado
-    const doc = new jsPDF({ unit: 'mm', format: [pageW, pageH] });
+    const doc = new jsPDF({ unit: 'mm', format: [pageW, pageH], orientation: 'landscape' });
 
     doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', margin, margin, cardW, hFront);
     doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', margin + cardW + gap, margin, cardW, hBack);
