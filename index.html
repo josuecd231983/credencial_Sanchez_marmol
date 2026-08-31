@@ -381,7 +381,11 @@
 
     lookupBtn.disabled = true; lookupBtn.textContent = 'Buscando…';
     try {
-      const res = await fetch(`${APPS_SCRIPT_URL}?folio=${encodeURIComponent(folio)}`);
+      const res = await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS con Apps Script
+        body: JSON.stringify({ buscarFolio: folio })
+      });
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Error desconocido');
 
@@ -458,18 +462,20 @@
     ]);
 
     // Tamaño físico de cada credencial, similar a una credencial de elector
-    const cardW = 55; // mm de ancho
+    const cardW = 55; // mm de ancho de cada credencial (tamaño real, sin estirar)
     const hFront = (canvasFront.height / canvasFront.width) * cardW;
     const hBack = (canvasBack.height / canvasBack.width) * cardW;
-    const margin = 6, gap = 6;
-    const pageW = margin * 2 + cardW * 2 + gap;
-    const pageH = margin * 2 + Math.max(hFront, hBack);
+    const margin = 15, gap = 8;
 
-    // Hoja horizontal, del tamaño justo para las dos credenciales lado a lado
-    const doc = new jsPDF({ unit: 'mm', format: [pageW, pageH], orientation: 'landscape' });
+    // Hoja tamaño carta estándar (215.9 x 279.4 mm) para que cualquier
+    // impresora la reconozca sin estirar el contenido a la fuerza.
+    const doc = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' });
 
     doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', margin, margin, cardW, hFront);
     doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', margin + cardW + gap, margin, cardW, hBack);
+    doc.setFontSize(9);
+    doc.setTextColor(120);
+    doc.text('Recorta por el borde de cada credencial.', margin, margin + Math.max(hFront, hBack) + 8);
 
     doc.save(`credencial_${assignedFolio || 'sin_folio'}.pdf`);
     pdfBtn.disabled = false; pdfBtn.textContent = 'Descargar credencial en PDF';
