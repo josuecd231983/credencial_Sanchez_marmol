@@ -46,12 +46,18 @@
   .cred-header img{width:100%;height:auto;display:block;}
   .cred-title{font-weight:800;font-size:.82rem;color:var(--ink);margin:.2rem 0;}
   .cred-subtitle{font-size:.62rem;font-weight:600;color:var(--ink);margin-bottom:8px;}
+  .cred-photo-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
   .cred-photo{
-    width:120px;height:150px;margin:0 auto 8px;border:1px solid var(--line);
+    width:105px;height:132px;margin:0;border:1px solid var(--line);flex:none;
     border-radius:4px;background:#eee;background-size:cover;background-position:center;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
   }
   .cred-photo svg{opacity:.3;}
+  .cred-seal-box{
+    width:105px;height:132px;flex:none;border:1px dashed var(--line);border-radius:4px;
+    display:flex;align-items:center;justify-content:center;padding:6px;
+  }
+  .cred-seal-box img{max-width:100%;max-height:100%;opacity:.9;}
   .cred-name{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;margin:0 0 8px;text-transform:uppercase;}
   .cred-line{font-size:.72rem;margin:3px 0;text-align:left;padding:0 6px;}
   .cred-line b{color:var(--ink);}
@@ -128,8 +134,13 @@
       </div>
       <p class="cred-title">ESC. PRIM. URBANA FEDERAL<br>MANUEL SÁNCHEZ MÁRMOL</p>
       <p class="cred-subtitle">CCT: 27DPR0233T | ZONA 014&nbsp;&nbsp;&nbsp;VILLAHERMOSA, TAB.</p>
-      <div class="cred-photo" id="pfFoto">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#999"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" fill="#999"/></svg>
+      <div class="cred-photo-row">
+        <div class="cred-photo" id="pfFoto">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#999"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" fill="#999"/></svg>
+        </div>
+        <div class="cred-seal-box">
+          <img src="assets/sello-escolar.png" alt="Sello de la escuela">
+        </div>
       </div>
       <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
       <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
@@ -155,7 +166,6 @@
       <p class="director">Prof. Nepomuceno Natividad Méndez Jiménez<small>Director</small></p>
       <p class="ciclo">2026-2027</p>
       <img class="stamp" src="assets/sello-escolar.png" alt="Sello de la escuela">
-      <div class="qr-box" id="qrBox"></div>
     </div>
   </div>
 
@@ -193,6 +203,9 @@
               <option>A</option><option>B</option>
             </select></label>
         </div>
+        <label><span class="field-name">Contraseña de tu grupo</span>
+          <input type="password" id="grupoPass" required autocomplete="off"></label>
+        <p class="hint">Pídesela al profesor(a) o a la escuela si no la tienes.</p>
       </section>
 
       <section>
@@ -260,11 +273,23 @@
 
   const el = id => document.getElementById(id);
   const nombre=el('nombre'), curp=el('curp'), grado=el('grado'), grupo=el('grupo'),
+        grupoPass=el('grupoPass'),
         sangre=el('sangre'), alergias=el('alergias'),
         tutorNombre=el('tutorNombre'), tutorCel=el('tutorCel'),
         autNombre=el('autNombre'), autTel=el('autTel'), foto=el('foto');
 
   const TURNO = 'MATUTINO'; // la escuela solo tiene turno matutino
+
+  // Contraseña por grupo — el administrador (la escuela) cambia estos valores
+  // por las contraseñas reales que le entregue a cada grupo.
+  const GROUP_PASSWORDS = {
+    '1A': 'GRUPO1A', '1B': 'GRUPO1B',
+    '2A': 'GRUPO2A', '2B': 'GRUPO2B',
+    '3A': 'GRUPO3A', '3B': 'GRUPO3B',
+    '4A': 'GRUPO4A', '4B': 'GRUPO4B',
+    '5A': 'GRUPO5A', '5B': 'GRUPO5B',
+    '6A': 'GRUPO6A', '6B': 'GRUPO6B'
+  };
 
   let fotoDataUrl = null;
   let qrDataUrl = null;
@@ -297,11 +322,11 @@
   });
 
   function buildQrPayload(folio){
-    return String(folio);
+    return `FOLIO: ${folio}\nCURP: ${curp.value}`;
   }
 
   function renderQr(folio){
-    const boxes = [document.getElementById('qrBoxFront'), document.getElementById('qrBox')].filter(Boolean);
+    const boxes = [document.getElementById('qrBoxFront')].filter(Boolean);
     if (!folio) { boxes.forEach(b => b.innerHTML = ''); qrDataUrl = null; return; }
     const text = buildQrPayload(folio);
     let qr = null;
@@ -404,6 +429,13 @@
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if (!form.checkValidity()){ form.reportValidity(); return; }
+
+    const claveGrupo = grado.value + grupo.value; // ej. "4B"
+    if (GROUP_PASSWORDS[claveGrupo] !== grupoPass.value){
+      setStatus('err','La contraseña no es correcta para el grado y grupo seleccionados.');
+      return;
+    }
+
     if (!fotoDataUrl && !editingFolio){ setStatus('err','Adjunta la fotografía del menor.'); return; }
     if (APPS_SCRIPT_URL.startsWith('PON_AQUI')){
       setStatus('err','Falta configurar APPS_SCRIPT_URL en el código (ver README).');
