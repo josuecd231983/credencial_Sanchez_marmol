@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- Librerías: código QR, captura de HTML a imagen, y generación de PDF -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.0.3/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -167,7 +167,7 @@
         <div class="row">
           <label><span class="field-name">Grado</span>
             <select id="grado" required><option value="" disabled selected>Selecciona…</option>
-              <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option><option>6°</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
             </select></label>
           <label><span class="field-name">Grupo</span>
             <select id="grupo" required><option value="" disabled selected>Selecciona…</option>
@@ -286,21 +286,16 @@
 
   function renderQr(){
     const box = document.getElementById('qrBox');
-    box.innerHTML = '';
     const text = buildQrPayload();
     try {
-      // Tamaño fijo y generoso (versión 40, corrección L) para que nunca
-      // se quede corto de espacio, sin depender de calcular el tamaño exacto.
-      new QRCode(box, { text, width: 120, height: 120, typeNumber: 40, correctLevel: QRCode.CorrectLevel.L });
+      const qr = qrcode(0, 'M'); // 0 = tamaño automático según el largo del texto
+      qr.addData(text);
+      qr.make();
+      qrDataUrl = qr.createDataURL(4, 4);
+      box.innerHTML = `<img src="${qrDataUrl}" alt="Código QR" style="width:100%;height:100%;">`;
     } catch (e) {
       console.error('No se pudo generar el QR:', e);
-      return;
     }
-    // qrcodejs tarda un tick en pintar el canvas/img; esperamos antes de leer el dataURL
-    setTimeout(() => {
-      const img = box.querySelector('img') || box.querySelector('canvas');
-      if (img) qrDataUrl = img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src;
-    }, 150);
   }
 
   // Regenerar QR cuando cambian los datos relevantes
@@ -325,7 +320,6 @@
     }
 
     renderQr();
-    await new Promise(r => setTimeout(r, 250)); // asegura que el QR ya se generó
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando…';
