@@ -240,8 +240,8 @@
       <section>
         <h2>Fotografía del menor</h2>
         <p class="hint">Debe ser una fotografía reciente, a color, tipo infantil (fondo claro, rostro descubierto).</p>
-        <p class="hint">En caso de no contar con fotografía digital, puede usar una fotografía tamaño infantil a color.</p>
-        <input type="file" id="foto" accept="image/*" required>
+        <p class="hint">En caso de no contar con fotografía digital, puede usar una fotografía tamaño infantil a color, o pegarla físicamente en la credencial impresa.</p>
+        <input type="file" id="foto" accept="image/*">
       </section>
 
       <button type="submit" id="submitBtn">Enviar registro</button>
@@ -282,18 +282,18 @@
   // Contraseña por grupo — el administrador (la escuela) cambia estos valores
   // por las contraseñas reales que le entregue a cada grupo.
   const GROUP_PASSWORDS = {
-    '1A': 'GRUPO1A',
-    '1B': 'GRUPO1B',
-    '2A': 'GRUPO2A',
-    '2B': 'GRUPO2B',
-    '3A': 'GRUPO3A',
-    '3B': 'GRUPO3B',
-    '4A': 'GRUPO4A',
-    '4B': 'GRUPO4B',
-    '5A': 'GRUPO5A',
-    '5B': 'GRUPO5B',
-    '6A': 'GRUPO6A',
-    '6B': 'GRUPO6B'
+    '1A': 'cambia1A',
+    '1B': 'cambia1B',
+    '2A': 'cambia2A',
+    '2B': 'cambia2B',
+    '3A': 'cambia3A',
+    '3B': 'cambia3B',
+    '4A': 'cambia4A',
+    '4B': 'cambia4B',
+    '5A': 'cambia5A',
+    '5B': 'cambia5B',
+    '6A': 'cambia6A',
+    '6B': 'cambia6B'
   };
 
   let fotoDataUrl = null;
@@ -441,7 +441,6 @@
       return;
     }
 
-    if (!fotoDataUrl && !editingFolio){ setStatus('err','Adjunta la fotografía del menor.'); return; }
     if (APPS_SCRIPT_URL.startsWith('PON_AQUI')){
       setStatus('err','Falta configurar APPS_SCRIPT_URL en el código (ver README).');
       return;
