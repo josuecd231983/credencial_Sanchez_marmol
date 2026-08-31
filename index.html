@@ -287,15 +287,21 @@
   function renderQr(){
     const box = document.getElementById('qrBox');
     const text = buildQrPayload();
-    try {
-      const qr = qrcode(0, 'M'); // 0 = tamaño automático según el largo del texto
-      qr.addData(text);
-      qr.make();
-      qrDataUrl = qr.createDataURL(4, 4);
-      box.innerHTML = `<img src="${qrDataUrl}" alt="Código QR" style="width:100%;height:100%;">`;
-    } catch (e) {
-      console.error('No se pudo generar el QR:', e);
+    let qr = null;
+    for (let type = 1; type <= 40 && !qr; type++){
+      try {
+        const candidate = qrcode(type, 'M');
+        candidate.addData(text);
+        candidate.make();
+        qr = candidate;
+      } catch (e) { qr = null; }
     }
+    if (!qr) { console.error('No se pudo generar el QR: texto demasiado largo.'); return; }
+    box.innerHTML = qr.createImgTag(4, 4);
+    const img = box.querySelector('img');
+    img.style.width = '100%';
+    img.style.height = '100%';
+    qrDataUrl = img.src;
   }
 
   // Regenerar QR cuando cambian los datos relevantes
