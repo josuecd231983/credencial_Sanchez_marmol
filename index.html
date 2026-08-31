@@ -57,6 +57,8 @@
   .cred-line b{color:var(--ink);}
   .cred-line span.val{color:var(--pink);font-weight:700;}
   .cred-folio{font-size:.72rem;margin-top:10px;text-align:left;padding:0 6px;}
+  .qr-box-front{position:absolute;bottom:10px;right:10px;width:56px;height:56px;background:#fff;padding:2px;}
+  .qr-box-front img,.qr-box-front canvas{width:100%;height:100%;display:block;}
 
   .cred-back{position:relative;}
   .cred-back .watermark{
@@ -66,7 +68,7 @@
   }
   .cred-back .cct{position:absolute;top:10px;right:12px;font-size:.6rem;font-weight:700;}
   .cred-back h3{color:var(--pink);font-size:.75rem;margin:14px 0 6px;text-transform:uppercase;}
-  .cred-back .disclaimer{font-size:.58rem;color:var(--muted);text-align:justify;padding:0 4px;margin:10px 0;}
+  .cred-back .disclaimer{font-size:.68rem;line-height:1.35;color:var(--muted);text-align:justify;padding:0 4px;margin:10px 0;}
   .cred-back .intransferible{color:var(--pink);font-weight:700;font-size:.68rem;margin:8px 0;}
   .cred-back .director{font-weight:700;font-size:.72rem;margin-top:10px;}
   .cred-back .director small{display:block;font-weight:400;color:var(--muted);}
@@ -132,8 +134,8 @@
       <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
       <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
       <p class="cred-line"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val">MATUTINO</span></p>
-      <p class="cred-line"><b>CICLO ESCOLAR:</b> <span class="val">2026-2027</span></p>
       <p class="cred-folio"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
+      <div class="qr-box-front" id="qrBoxFront"></div>
     </div>
 
     <!-- REVERSO -->
@@ -299,8 +301,8 @@
   }
 
   function renderQr(folio){
-    const box = document.getElementById('qrBox');
-    if (!folio) { box.innerHTML = ''; qrDataUrl = null; return; }
+    const boxes = [document.getElementById('qrBoxFront'), document.getElementById('qrBox')].filter(Boolean);
+    if (!folio) { boxes.forEach(b => b.innerHTML = ''); qrDataUrl = null; return; }
     const text = buildQrPayload(folio);
     let qr = null;
     for (let type = 1; type <= 40 && !qr; type++){
@@ -312,11 +314,14 @@
       } catch (e) { qr = null; }
     }
     if (!qr) { console.error('No se pudo generar el QR: texto demasiado largo.'); return; }
-    box.innerHTML = qr.createImgTag(4, 4);
-    const img = box.querySelector('img');
-    img.style.width = '100%';
-    img.style.height = '100%';
-    qrDataUrl = img.src;
+    const tag = qr.createImgTag(4, 4);
+    boxes.forEach(box => {
+      box.innerHTML = tag;
+      const img = box.querySelector('img');
+      img.style.width = '100%';
+      img.style.height = '100%';
+    });
+    qrDataUrl = boxes[0].querySelector('img').src;
   }
 
   function setStatus(type, msg){
@@ -468,7 +473,7 @@
     ]);
 
     // Tamaño físico de cada credencial, similar a una credencial de elector
-    const cardW = 65, cardH = 95; // tamaño de credencial: 6.5 x 9.5 cm
+    const cardW = 54, cardH = 86; // tamaño de credencial: 5.4 x 8.6 cm, vertical
     const margin = 15, gap = 8;
 
     // Hoja tamaño carta estándar (215.9 x 279.4 mm) para que cualquier
