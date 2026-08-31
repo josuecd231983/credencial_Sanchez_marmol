@@ -127,7 +127,7 @@
       </div>
       <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
       <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
-      <p class="cred-line"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val" id="pfTurno">—</span></p>
+      <p class="cred-line"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val">MATUTINO</span></p>
       <p class="cred-line"><b>CICLO ESCOLAR:</b> <span class="val">2026-2027</span></p>
       <p class="cred-folio"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
     </div>
@@ -164,18 +164,14 @@
             pattern="[A-Z]{4}[0-9]{6}[HM][A-Z]{5}[0-9A-Z]{2}" placeholder="18 caracteres"
             style="text-transform:uppercase" autocomplete="off"></label>
         <p class="hint">Se convierte a mayúsculas automáticamente.</p>
-        <div class="row row3">
+        <div class="row">
           <label><span class="field-name">Grado</span>
             <select id="grado" required><option value="" disabled selected>Selecciona…</option>
               <option>1°</option><option>2°</option><option>3°</option><option>4°</option><option>5°</option><option>6°</option>
             </select></label>
           <label><span class="field-name">Grupo</span>
             <select id="grupo" required><option value="" disabled selected>Selecciona…</option>
-              <option>A</option><option>B</option><option>C</option><option>Único</option>
-            </select></label>
-          <label><span class="field-name">Turno</span>
-            <select id="turno" required><option value="" disabled selected>Selecciona…</option>
-              <option>MATUTINO</option><option>VESPERTINO</option>
+              <option>A</option><option>B</option>
             </select></label>
         </div>
       </section>
@@ -242,9 +238,11 @@
 
   const el = id => document.getElementById(id);
   const nombre=el('nombre'), curp=el('curp'), grado=el('grado'), grupo=el('grupo'),
-        turno=el('turno'), sangre=el('sangre'), alergias=el('alergias'),
+        sangre=el('sangre'), alergias=el('alergias'),
         tutorNombre=el('tutorNombre'), tutorCel=el('tutorCel'),
         autNombre=el('autNombre'), autTel=el('autTel'), foto=el('foto');
+
+  const TURNO = 'MATUTINO'; // la escuela solo tiene turno matutino
 
   let fotoDataUrl = null;
   let qrDataUrl = null;
@@ -255,7 +253,6 @@
   curp.addEventListener('input', () => { curp.value = curp.value.toUpperCase(); el('pfCurp').textContent = curp.value || '—'; });
   grado.addEventListener('change', () => el('pfGrado').textContent = grado.value || '—');
   grupo.addEventListener('change', () => el('pfGrupo').textContent = grupo.value || '—');
-  turno.addEventListener('change', () => el('pfTurno').textContent = turno.value || '—');
   sangre.addEventListener('change', () => el('pbSangre').textContent = sangre.value || '—');
   alergias.addEventListener('input', () => el('pbAlergias').textContent = alergias.value || '—');
   tutorNombre.addEventListener('input', () => el('pbTutorNombre').textContent = tutorNombre.value || '—');
@@ -327,7 +324,7 @@
 
     const payload = {
       nombre: nombre.value, curp: curp.value, grado: grado.value, grupo: grupo.value,
-      turno: turno.value, cicloEscolar: '2026-2027', sangre: sangre.value, alergias: alergias.value,
+      turno: TURNO, cicloEscolar: '2026-2027', sangre: sangre.value, alergias: alergias.value,
       tutorNombre: tutorNombre.value, tutorCelular: tutorCel.value,
       autNombre: autNombre.value, autCelular: autTel.value,
       fotoBase64: fotoDataUrl, qrBase64: qrDataUrl
