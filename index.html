@@ -462,20 +462,18 @@
     ]);
 
     // Tamaño físico de cada credencial, similar a una credencial de elector
-    const cardW = 55; // mm de ancho de cada credencial (tamaño real, sin estirar)
-    const hFront = (canvasFront.height / canvasFront.width) * cardW;
-    const hBack = (canvasBack.height / canvasBack.width) * cardW;
+    const cardW = 54, cardH = 85.6; // tamaño estándar de credencial (85.6 x 54 mm), en vertical
     const margin = 15, gap = 8;
 
     // Hoja tamaño carta estándar (215.9 x 279.4 mm) para que cualquier
     // impresora la reconozca sin estirar el contenido a la fuerza.
     const doc = new jsPDF({ unit: 'mm', format: 'letter', orientation: 'portrait' });
 
-    doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', margin, margin, cardW, hFront);
-    doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', margin + cardW + gap, margin, cardW, hBack);
+    doc.addImage(canvasFront.toDataURL('image/png'), 'PNG', margin, margin, cardW, cardH);
+    doc.addImage(canvasBack.toDataURL('image/png'), 'PNG', margin + cardW + gap, margin, cardW, cardH);
     doc.setFontSize(9);
     doc.setTextColor(120);
-    doc.text('Recorta por el borde de cada credencial.', margin, margin + Math.max(hFront, hBack) + 8);
+    doc.text('Recorta por el borde de cada credencial.', margin, margin + cardH + 8);
 
     doc.save(`credencial_${assignedFolio || 'sin_folio'}.pdf`);
     pdfBtn.disabled = false; pdfBtn.textContent = 'Descargar credencial en PDF';
