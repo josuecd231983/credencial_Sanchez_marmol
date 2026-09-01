@@ -46,28 +46,23 @@
   .cred-header img{width:100%;height:auto;display:block;}
   .cred-title{font-weight:800;font-size:.82rem;color:var(--ink);margin:.2rem 0;}
   .cred-subtitle{font-size:.62rem;font-weight:600;color:var(--ink);margin-bottom:8px;}
-  .cred-photo-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}
+  .cred-photo-row{display:flex;gap:6px;justify-content:center;align-items:flex-start;margin-bottom:8px;}
   .cred-photo{
     width:136px;height:174px;margin:0;border:1px solid var(--line);flex:none;
     border-radius:4px;background:#eee;background-size:cover;background-position:center;
     display:flex;align-items:center;justify-content:center;overflow:hidden;
   }
   .cred-photo svg{opacity:.3;}
-  .cred-seal-box{
-    width:120px;height:174px;flex:none;border:1px dashed var(--line);border-radius:4px;
-    display:flex;align-items:center;justify-content:center;padding:6px;
-  }
-  .cred-seal-box img{max-width:100%;max-height:100%;opacity:.9;}
   .cred-name{font-family:'Fraunces',serif;font-weight:700;font-size:1rem;margin:0 0 8px;text-transform:uppercase;}
   .cred-line{font-size:.72rem;margin:3px 0;text-align:left;padding:0 6px;}
   .cred-line b{color:var(--ink);}
   .cred-line span.val{color:var(--pink);font-weight:700;}
   .cred-folio{font-size:.72rem;margin-top:10px;text-align:left;padding:0 6px;}
-  .qr-box-front{position:absolute;bottom:10px;right:10px;width:56px;height:56px;background:#fff;padding:2px;}
+  .qr-box-front{position:absolute;bottom:10px;right:10px;width:72px;height:72px;background:#fff;padding:2px;}
   .qr-box-front img,.qr-box-front canvas{width:100%;height:100%;display:block;}
-  .clear-qr{padding-right:66px;}
+  .clear-qr{padding-right:82px;}
 
-  .cred-back{position:relative;}
+  .cred-back{position:relative;display:flex;flex-direction:column;min-height:400px;}
   .cred-back .watermark{
     position:absolute;top:50%;left:50%;width:92%;
     transform:translate(-50%,-50%);
@@ -77,9 +72,13 @@
   .cred-back h3{color:var(--pink);font-size:.75rem;margin:14px 0 6px;text-transform:uppercase;}
   .cred-back .disclaimer{font-size:.68rem;line-height:1.35;color:var(--muted);text-align:justify;padding:0 4px;margin:10px 0;}
   .cred-back .intransferible{color:var(--pink);font-weight:700;font-size:.68rem;margin:8px 0;}
-  .cred-back .director{font-weight:700;font-size:.72rem;margin-top:10px;}
+  .cred-back .director{font-weight:700;font-size:.72rem;text-align:left;}
   .cred-back .director small{display:block;font-weight:400;color:var(--muted);}
-  .cred-back .ciclo{color:var(--pink);font-weight:800;font-size:1.1rem;margin-top:6px;}
+  .cred-back .ciclo-left{color:var(--pink);font-weight:800;font-size:1rem;margin-top:8px;text-align:left;padding:0 4px;}
+  .signoff-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto;padding-top:16px;gap:10px;padding-left:4px;padding-right:4px;}
+  .signoff-col{flex:1;min-width:0;}
+  .sign-space{height:24px;border-bottom:1px solid var(--line);margin-bottom:5px;}
+  .back-seal-box{flex:none;width:62px;height:62px;border:1px dashed var(--line);border-radius:4px;}
   .qr-box{position:absolute;bottom:10px;right:10px;width:64px;height:64px;background:#fff;padding:2px;}
   .qr-box img,.qr-box canvas{width:100%;height:100%;}
 
@@ -137,11 +136,11 @@
         <div class="cred-photo" id="pfFoto">
           <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#999"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" fill="#999"/></svg>
         </div>
-        <div class="cred-seal-box"></div>
       </div>
       <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
       <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
-      <p class="cred-line clear-qr"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val">MATUTINO</span></p>
+      <p class="cred-line clear-qr"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span></p>
+      <p class="cred-line clear-qr"><b>TURNO:</b> <span class="val">MATUTINO</span></p>
       <p class="cred-folio clear-qr"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
       <div class="qr-box-front" id="qrBoxFront"></div>
     </div>
@@ -160,8 +159,14 @@
       <p class="cred-line"><b>CELULAR:</b> <span class="val" id="pbAutCel">—</span></p>
       <p class="intransferible">ESTA CREDENCIAL ES PERSONAL E INTRANSFERIBLE</p>
       <p class="disclaimer">Esta credencial es personal e intransferible y tiene validez oficial únicamente durante el ciclo escolar 2026 - 2027.</p>
-      <p class="director">Prof. Nepomuceno Natividad Méndez Jiménez<small>Director</small></p>
-      <p class="ciclo">2026-2027</p>
+      <p class="ciclo-left">2026-2027</p>
+      <div class="signoff-row">
+        <div class="signoff-col">
+          <div class="sign-space"></div>
+          <p class="director">Prof. Nepomuceno Natividad Méndez Jiménez<small>Director</small></p>
+        </div>
+        <div class="back-seal-box"></div>
+      </div>
     </div>
   </div>
 
