@@ -65,6 +65,7 @@
   .cred-folio{font-size:.72rem;margin-top:10px;text-align:left;padding:0 6px;}
   .qr-box-front{position:absolute;bottom:10px;right:10px;width:56px;height:56px;background:#fff;padding:2px;}
   .qr-box-front img,.qr-box-front canvas{width:100%;height:100%;display:block;}
+  .clear-qr{padding-right:66px;}
 
   .cred-back{position:relative;}
   .cred-back .watermark{
@@ -142,8 +143,8 @@
       </div>
       <p class="cred-name" id="pfNombre">Nombre del estudiante</p>
       <p class="cred-line"><b>CURP:</b> <span class="val" id="pfCurp">—</span></p>
-      <p class="cred-line"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val">MATUTINO</span></p>
-      <p class="cred-folio"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
+      <p class="cred-line clear-qr"><b>GRADO:</b> <span class="val" id="pfGrado">—</span> &nbsp;<b>GRUPO:</b> <span class="val" id="pfGrupo">—</span> &nbsp;<b>TURNO:</b> <span class="val">MATUTINO</span></p>
+      <p class="cred-folio clear-qr"><b>FOLIO:</b> <span class="val" id="pfFolio">—</span></p>
       <div class="qr-box-front" id="qrBoxFront"></div>
     </div>
 
@@ -282,18 +283,18 @@
   // Contraseña por grupo — el administrador (la escuela) cambia estos valores
   // por las contraseñas reales que le entregue a cada grupo.
   const GROUP_PASSWORDS = {
-    '1A': 'grupo1A',
-    '1B': 'grupo1B',
-    '2A': 'grupo2A',
-    '2B': 'grupo2B',
-    '3A': 'grupo3A',
-    '3B': 'grupo3B',
-    '4A': 'grupo4A',
-    '4B': 'grupo4B',
-    '5A': 'grupo5A',
-    '5B': 'grupo5B',
-    '6A': 'grupo6A',
-    '6B': 'grupo6B'
+    '1A': 'cambia1A',
+    '1B': 'cambia1B',
+    '2A': 'cambia2A',
+    '2B': 'cambia2B',
+    '3A': 'cambia3A',
+    '3B': 'cambia3B',
+    '4A': 'cambia4A',
+    '4B': 'cambia4B',
+    '5A': 'cambia5A',
+    '5B': 'cambia5B',
+    '6A': 'cambia6A',
+    '6B': 'cambia6B'
   };
 
   let fotoDataUrl = null;
@@ -514,7 +515,7 @@
     ]);
 
     // Tamaño físico de cada credencial, similar a una credencial de elector
-    const cardW = 54, cardH = 86; // tamaño de credencial: 5.4 x 8.6 cm, vertical
+    const cardW = 55, cardH = 87; // tamaño de credencial: 5.5 x 8.7 cm, vertical
     const margin = 15, gap = 8;
 
     // Hoja tamaño carta estándar (215.9 x 279.4 mm) para que cualquier
